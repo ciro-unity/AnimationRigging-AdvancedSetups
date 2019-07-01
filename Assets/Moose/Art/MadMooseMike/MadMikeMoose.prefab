@@ -402,7 +402,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc2f0899cd43d42889412ac357befdde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speedMultiplier: 5
+  speedMultiplier: 3
   gazeVirtualBone: {fileID: 9208399347679347914}
   headMultiAim: {fileID: 3211032609183664813}
   selectionMarker: {fileID: 7475603640506461812}
@@ -723,6 +723,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3661857168706824112, guid: e9d0f0efb7d854e6c9b9b7204c1e5480,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3661857168706824112, guid: e9d0f0efb7d854e6c9b9b7204c1e5480,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3661857168706824112, guid: e9d0f0efb7d854e6c9b9b7204c1e5480,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e9d0f0efb7d854e6c9b9b7204c1e5480, type: 3}

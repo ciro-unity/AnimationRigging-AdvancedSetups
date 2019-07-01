@@ -7,7 +7,7 @@ using UnityEngine.Events;
 
 public class MadMikeMooseCharController : MonoBehaviour
 {
-	public float speedMultiplier = 4f;
+	public float speedMultiplier = 3f;
 	public Transform gazeVirtualBone;
 	public MultiAimConstraint headMultiAim;
 	public GameObject selectionMarker;
@@ -56,7 +56,7 @@ public class MadMikeMooseCharController : MonoBehaviour
 			{
 				_transform.position = hit.position;
 				_animator.SetBool("IsMoving", hasMoved);
-				_transform.forward = Vector3.Lerp(_transform.forward, _inputVector, Time.deltaTime * 10f);
+				_transform.forward = Vector3.Slerp(_transform.forward, _inputVector, Time.deltaTime * 7f);
 			}
 			else
 			{
