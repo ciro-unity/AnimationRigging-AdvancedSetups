@@ -10,6 +10,7 @@ public class MadMikeMooseCharController : MonoBehaviour
 	public float speedMultiplier = 3f;
 	public Transform gazeVirtualBone;
 	public MultiAimConstraint headMultiAim;
+	public Transform rightHandIKVirtualBone;
 	public GameObject selectionMarker;
 	
 	private float _currentSpeed;
@@ -115,6 +116,17 @@ public class MadMikeMooseCharController : MonoBehaviour
 			{
 				headMultiAim.weight = Mathf.Lerp(headMultiAim.weight, 0f, Time.deltaTime * 10f);
 				_wasLookingAtSomething = false;
+			}
+		}
+
+		//Grab routine
+		if(Input.GetKeyDown(KeyCode.Space))
+		{
+			if(_closest != null)
+			{
+				Transform handPoseRefT = _closest.GetComponent<Interactable>().handPoseRef.transform;
+				rightHandIKVirtualBone.SetPositionAndRotation(handPoseRefT.position, handPoseRefT.rotation);
+				_animator.SetTrigger("ReachForward");
 			}
 		}
     }
