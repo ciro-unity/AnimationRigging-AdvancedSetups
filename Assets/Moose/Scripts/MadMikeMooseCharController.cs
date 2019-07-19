@@ -10,9 +10,9 @@ public class MadMikeMooseCharController : MonoBehaviour
 	public float speedMultiplier = 3f;
 	public Transform gazeVirtualBone;
 	public MultiAimConstraint headMultiAim;
-	public Transform rightHandIKVirtualBone;
+	public Transform rightHandIKVirtualBone, rightHandIKProgrammaticBone;
 	public GameObject selectionMarker;
-	
+
 	private bool _inputActive = true;
 	private bool _needToGetCloser = false;
 	private float _currentSpeed;
@@ -24,6 +24,7 @@ public class MadMikeMooseCharController : MonoBehaviour
 	private float _interactSqrDistance = 1.2f;
 	private GameObject _closest;
 	private bool _wasLookingAtSomething = false;
+	private bool _isLookingAtSomething = false;
 	private Vector3 _destination;
 	private Vector3 _closingInDir;
 
@@ -37,11 +38,20 @@ public class MadMikeMooseCharController : MonoBehaviour
 		selectionMarker.SetActive(false);
     }
 
+	private void Start()
+	{
+		SearchInteractables();
+	}
+
+	private void SearchInteractables()
+	{
+		_interactableObjects = GameObject.FindGameObjectsWithTag("Interactable");
+	}
+
     void Update()
     {
-		//quick search for the Interactable objects in the scene
 		if(_interactableObjects == null)
-			_interactableObjects = GameObject.FindGameObjectsWithTag("Interactable");
+			SearchInteractables();
 
 		if(_inputActive)
 		{
@@ -63,63 +73,19 @@ public class MadMikeMooseCharController : MonoBehaviour
 				_animator.SetBool("IsMoving", false);
 			}
 
-			//Orient and move the plane which limits the gaze
-			_forwardPlane.SetNormalAndPosition(_transform.forward, _transform.position);
-
-			//Head aim routine
-			if(_interactableObjects.Length != 0)
-			{
-				_closest = null;
-				float closestSqrDistance = Mathf.Infinity;
-				for(int i=0; i<_interactableObjects.Length; i++)
-				{
-					float sqrDistance = (_transform.position - _interactableObjects[i].transform.position).sqrMagnitude;
-					
-					//If closer than the previous AND within gaze range AND on the right side of the plane
-					if(sqrDistance < closestSqrDistance
-						&& sqrDistance <= _gazeMaxSqrDistance
-						&& _forwardPlane.GetSide(_interactableObjects[i].transform.position))
-					{
-						_closest = _interactableObjects[i];
-						closestSqrDistance = sqrDistance;
-					}
-				}
-
-				//Fire the event for the GameplayManager
-				if(!_wasLookingAtSomething && _closest != null)
-				{
-					selectionMarker.SetActive(true);
-					GazeConnected.Invoke();
-				}
-				else if(_wasLookingAtSomething && _closest == null)
-				{
-					selectionMarker.SetActive(false);
-					GazeDisconnected.Invoke();
-				}
-
-				//Adjust the gaze constraint
-				if(_closest != null)
-				{
-					headMultiAim.weight = Mathf.Lerp(headMultiAim.weight, 1f, Time.deltaTime * 20f);
-					gazeVirtualBone.position = _closest.transform.position;
-					_wasLookingAtSomething = true;
-				}
-				else
-				{
-					headMultiAim.weight = Mathf.Lerp(headMultiAim.weight, 0f, Time.deltaTime * 10f);
-					_wasLookingAtSomething = false;
-				}
-			}
+			
 
 			//Grab routine
 			if(Input.GetKeyDown(KeyCode.Space))
 			{
 				if(_closest != null)
 				{
+					_inputActive = false;
+					
 					_closingInDir = _closest.transform.position-_transform.position;
 					_closingInDir.y = 0f;
 					_destination = transform.position + _closingInDir;
-					
+
 					if(Vector3.SqrMagnitude(_closingInDir) > _interactSqrDistance)
 					{
 						//need to get closer
@@ -127,7 +93,6 @@ public class MadMikeMooseCharController : MonoBehaviour
 						{
 							_closingInDir.Normalize();
 						}
-						_inputActive = false;
 						_needToGetCloser = true;
 					}
 					else
@@ -151,26 +116,84 @@ public class MadMikeMooseCharController : MonoBehaviour
 		}
     }
 
+	private void LateUpdate()
+	{
+		//Orient and move the plane which limits the gaze
+			_forwardPlane.SetNormalAndPosition(_transform.forward, _transform.position);
+
+		//Head aim routine
+		if(_inputActive
+			&& _interactableObjects != null
+			&& _interactableObjects.Length != 0)
+		{
+			_closest = null;
+			float closestSqrDistance = Mathf.Infinity;
+			for(int i=0; i<_interactableObjects.Length; i++)
+			{
+				float sqrDistance = (_transform.position - _interactableObjects[i].transform.position).sqrMagnitude;
+				
+				//If closer than the previous AND within gaze range AND on the right side of the plane
+				if(sqrDistance < closestSqrDistance
+					&& sqrDistance <= _gazeMaxSqrDistance
+					&& _forwardPlane.GetSide(_interactableObjects[i].transform.position))
+				{
+					_closest = _interactableObjects[i];
+					closestSqrDistance = sqrDistance;
+				}
+			}
+
+			//Fire the event for the GameplayManager
+			if(!_wasLookingAtSomething && _closest != null)
+			{
+				selectionMarker.SetActive(true);
+				_isLookingAtSomething = true;
+				GazeConnected.Invoke();
+			}
+			else if(_wasLookingAtSomething && _closest == null)
+			{
+				selectionMarker.SetActive(false);
+				_isLookingAtSomething = false;
+				GazeDisconnected.Invoke();
+			}
+
+			//Adjust the gaze constraint
+			if(_isLookingAtSomething)
+			{
+				headMultiAim.weight = Mathf.Lerp(headMultiAim.weight, 1f, Time.deltaTime * 20f);
+				gazeVirtualBone.position = _closest.transform.position;
+				_wasLookingAtSomething = true;
+			}
+			else
+			{
+				headMultiAim.weight = Mathf.Lerp(headMultiAim.weight, 0f, Time.deltaTime * 10f);
+				_wasLookingAtSomething = false;
+			}
+		}
+	}
+
 	private void PlayReachingAnimation()
 	{
-		selectionMarker.SetActive(false);
 		Transform handPoseRefT = _closest.GetComponent<Interactable>().handPoseRef.transform;
-		rightHandIKVirtualBone.SetPositionAndRotation(handPoseRefT.position, handPoseRefT.rotation);
+		rightHandIKProgrammaticBone.SetPositionAndRotation(handPoseRefT.position, handPoseRefT.rotation);  //lock the programmatic virtual bone in position to pick up the Interactable
+		
+		selectionMarker.SetActive(false);
+		_isLookingAtSomething = false; //will progressively reset the head
+
 		_animator.SetTrigger("ReachForward");
 	}
 
-	private void ParentInteractableToHand()
+	private void ObjectGrabbed()
 	{
 		_closest.transform.SetParent(rightHandIKVirtualBone, true);
 	}
 
-	private void DestroyInteractable()
+	private void InteractionOver()
 	{
 		Destroy(_closest);
 
 		//Cleanup		
-		_interactableObjects = null;
 		_closest = null;
+		_interactableObjects = null;
 		GazeDisconnected.Invoke();
 		
 		_inputActive = true;
