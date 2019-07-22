@@ -21,7 +21,7 @@ public class MadMikeMooseCharController : MonoBehaviour
 	private GameObject[] _interactableObjects;
 	private Plane _forwardPlane;
 	private float _gazeMaxSqrDistance = 9f;
-	private float _interactSqrDistance = 1.2f;
+	private float _interactSqrDistance = 1f;
 	private GameObject _closest;
 	private bool _wasLookingAtSomething = false;
 	private bool _isLookingAtSomething = false;
@@ -156,18 +156,19 @@ public class MadMikeMooseCharController : MonoBehaviour
 				GazeDisconnected.Invoke();
 			}
 
-			//Adjust the gaze constraint
-			if(_isLookingAtSomething)
-			{
-				headMultiAim.weight = Mathf.Lerp(headMultiAim.weight, 1f, Time.deltaTime * 20f);
-				gazeVirtualBone.position = _closest.transform.position;
-				_wasLookingAtSomething = true;
-			}
-			else
-			{
-				headMultiAim.weight = Mathf.Lerp(headMultiAim.weight, 0f, Time.deltaTime * 10f);
-				_wasLookingAtSomething = false;
-			}
+		}
+
+		//Adjust the gaze constraint
+		if(_isLookingAtSomething)
+		{
+			headMultiAim.weight = Mathf.Clamp01(headMultiAim.weight + Time.deltaTime * 5f);
+			gazeVirtualBone.position = _closest.transform.position; //follow the object if it's moving (or if the character is moving)
+			_wasLookingAtSomething = true;
+		}
+		else
+		{
+			headMultiAim.weight = Mathf.Clamp01(headMultiAim.weight - Time.deltaTime * 5f);
+			_wasLookingAtSomething = false;
 		}
 	}
 
@@ -177,6 +178,7 @@ public class MadMikeMooseCharController : MonoBehaviour
 		rightHandIKProgrammaticBone.SetPositionAndRotation(handPoseRefT.position, handPoseRefT.rotation);  //lock the programmatic virtual bone in position to pick up the Interactable
 		
 		selectionMarker.SetActive(false);
+		_closest.tag = "Untagged";
 		_isLookingAtSomething = false; //will progressively reset the head
 
 		_animator.SetTrigger("ReachForward");
