@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: cacf9e84517b0594194570ba7c9777d5
 ModelImporter:
-  serializedVersion: 25
+  serializedVersion: 26
   internalIDToNameTable: []
   externalObjects:
   - first:
@@ -48,7 +48,8 @@ ModelImporter:
     meshCompression: 0
     addColliders: 0
     useSRGBMaterialColor: 1
-    importVisibility: 1
+    sortHierarchyByName: 1
+    importVisibility: 0
     importBlendShapes: 1
     importCameras: 1
     importLights: 1
@@ -90,7 +91,7 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
-    globalScale: 0.02
+    globalScale: 2
     rootMotionBoneName: Root
     hasTranslationDoF: 0
     hasExtraRoot: 0
